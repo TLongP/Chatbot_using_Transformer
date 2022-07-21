@@ -1,5 +1,5 @@
 import tensorflow as tf
-from models.positional_encoding.positional_encoding import positional_encoding, PositionalEncoding
+from models.positional_encoding.positional_encoding import  PositionalEncoding
 from models.custom_blocks.layers import DecoderLayer
 
 
@@ -11,9 +11,15 @@ class Decoder(tf.keras.layers.Layer):
 
         self.model_dim = model_dim
         self.num_layers = num_layers
+        self.target_vocab_size = target_vocab_size
+        self.max_tokens = max_tokens
+        self.dropout_rate = dropout_rate
+        self.dff = dff
+        self.num_heads = num_heads
 
-        self.embedding = tf.keras.layers.Embedding(target_vocab_size, model_dim)
-        #self.pos_encoding = positional_encoding(max_tokens, model_dim)
+        self.embedding = tf.keras.layers.Embedding(target_vocab_size, 
+                                                    model_dim)
+
         self.pos_encoding = PositionalEncoding(max_tokens, model_dim)
         self.dec_layers = [
             DecoderLayer(model_dim=model_dim, num_heads=num_heads, dff=dff, dropout_rate=dropout_rate)
@@ -28,7 +34,7 @@ class Decoder(tf.keras.layers.Layer):
 
         x = self.embedding(x)  # (batch_size, target_seq_len, model_dim)
         x *= tf.math.sqrt(tf.cast(self.model_dim, tf.float32))
-        #x += self.pos_encoding[:, :seq_len, :]
+        
         x = self.pos_encoding(x)
         x = self.dropout(x, training=training)
 
@@ -39,5 +45,19 @@ class Decoder(tf.keras.layers.Layer):
             attention_weights[f'decoder_layer{i+1}_block1'] = block1
             attention_weights[f'decoder_layer{i+1}_block2'] = block2
 
-        # x.shape == (batch_size, target_seq_len, model_dim)
         return x, attention_weights
+    
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+            "num_layers" : self.num_layers,
+            "model_dim" : self.model_dim,
+            "num_heads" : self.num_heads,
+            "dff" : self.dff,
+            "tartget_vocab_size" : self.target_vocab_size,
+            "dropout_rate" : self.dropout_rate,
+            "max_tokens" : self.max_tokens
+            }
+            )
+        return config

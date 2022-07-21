@@ -42,12 +42,12 @@ def scaled_dot_product_attention(q, k, v, mask):
 
 
 
-class MultiHeadAttention(tf.keras.layers.Layer):
+class CustomMultiHeadAttention(tf.keras.layers.Layer):
     def __init__(self,*, model_dim, num_heads):
         """
         model_dim : word embedding dimension
         """
-        super(MultiHeadAttention, self).__init__()
+        super().__init__()
         self.num_heads = num_heads
         self.model_dim = model_dim
         self.depth = model_dim // self.num_heads

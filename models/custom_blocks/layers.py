@@ -1,5 +1,5 @@
 import tensorflow as tf
-from models.attention.attention import MultiHeadAttention
+from models.attention.attention import CustomMultiHeadAttention
 
 
 def point_wise_feed_forward_network(model_dim, dff):
@@ -36,7 +36,7 @@ class EncoderLayer(tf.keras.layers.Layer):
     """
     def __init__(self,*, model_dim, num_heads, dff, dropout_rate=0.1):
         super().__init__()
-        self.mha = MultiHeadAttention(model_dim=model_dim, num_heads=num_heads)
+        self.mha = CustomMultiHeadAttention(model_dim=model_dim, num_heads=num_heads)
         self.ffn = FeedForward(model_dim, dff, dropout_rate)
 
         self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)
@@ -63,8 +63,8 @@ class DecoderLayer(tf.keras.layers.Layer):
     def __init__(self,*, model_dim, num_heads, dff, dropout_rate=0.1):
         super().__init__()
 
-        self.mha1 = MultiHeadAttention(model_dim=model_dim, num_heads=num_heads)
-        self.mha2 = MultiHeadAttention(model_dim=model_dim, num_heads=num_heads)
+        self.mha1 = CustomMultiHeadAttention(model_dim=model_dim, num_heads=num_heads)
+        self.mha2 = CustomMultiHeadAttention(model_dim=model_dim, num_heads=num_heads)
 
         self.ffn = FeedForward(model_dim, dff, dropout_rate)
 
