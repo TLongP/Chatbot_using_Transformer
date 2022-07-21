@@ -25,6 +25,3 @@ def accuracy_function(real, pred):
   accuracies = tf.cast(accuracies, dtype=tf.float32)
   mask = tf.cast(mask, dtype=tf.float32)
   return tf.reduce_sum(accuracies)/tf.reduce_sum(mask)
-
-train_loss = tf.keras.metrics.Mean(name='train_loss')
-train_accuracy = tf.keras.metrics.Mean(name='train_accuracy')

@@ -1,1 +1,1 @@
-from .positional_encoding import positional_encoding
+from .positional_encoding import positional_encoding, PositionalEncoding

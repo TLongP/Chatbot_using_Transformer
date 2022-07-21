@@ -6,6 +6,7 @@ def processing_text(line):
     """
     preprocessing each line 
     remove special character . ? , !
+    the data is split by tab
     return is a 2d array  
     can also add to text vectorizer standardize
     """
@@ -30,4 +31,13 @@ def create_dataset(
                     ).shuffle(BUFFER_SIZE,seed=SEED
                     ).batch(BATCH_SIZE
                     ).prefetch(1)
- 
+
+
+
+
+def add_start_and_end_tokens(input_data):
+    """
+    Add a start and end token to each sentence
+    """
+    data = tf.strings.join(["[START]",input_data,"[END]"],separator=" ")
+    return data
