@@ -84,53 +84,93 @@ class Translator:
         top_k_sentence = top_k_sentence.write(0,start_array.stack())
         
         # a list from predicted top k sentence
-        choose_next_top_k = tf.TensorArray(dtype=tf.int64, 
+        next_top_k_sentence = tf.TensorArray(dtype=tf.int64, 
                                         size=0, 
                                         dynamic_size=True,
                                         infer_shape=False,
                                         clear_after_read=False)
-        # a list of losses from choose_next_top_k
+        # a list of losses from next_top_k_sentence
         # base on the top k from this set we can choose
-        # top k from choose_next_top_k
-        choose_next_top_loss = tf.TensorArray(dtype=tf.float32, 
+        # top k from next_top_k_sentence
+        top_k_loss_vector = tf.TensorArray(dtype=tf.float32, 
                                         size=0, 
                                         dynamic_size=True,
                                         infer_shape=False,
                                         clear_after_read=False)
-                                    
-        for i in tf.range(1):
+
+
+        next_top_loss_vector = tf.TensorArray(dtype=tf.float32, 
+                                        size=0, 
+                                        dynamic_size=True,
+                                        infer_shape=False,
+                                        clear_after_read=False)
+        next_top_loss = tf.TensorArray(dtype=tf.float32, 
+                                        size=0, 
+                                        dynamic_size=True,
+                                        infer_shape=True,
+                                        clear_after_read=False)                     
+        for i in tf.range(max_length):
+
+
+
             for j in range(top_k_sentence.size()):
-                output = tf.transpose(top_k_sentence.read(j))
+
+                
+                output = top_k_sentence.read(j)
                 predictions, _ = self.model([encoder_input, output], training=False)
                 # select the last token from the, eg the next word for the sentence
                 predictions = predictions[:, -1:, :]  # (batch_size, 1, vocab_size)
                 next_values, next_words = find_top_k(predictions) # (values,indexes)
                 next_words = tf.cast(next_words,dtype=tf.int64)
-
-
-                #for each predictions (eg. sentence) we write into choose_next_top_k
-                
+                output = top_k_sentence.read(j)
+                predictions, _ = self.model([encoder_input, output], training=False)
+                # select the last token from the, eg the next word for the sentence
+                predictions = predictions[:, -1:, :]  # (batch_size, 1, vocab_size)
+                #  next_values do not lie beetween [0,1] since we do not use soft max at last input
+                predictions = tf.nn.softmax(predictions,axis=-1)
+                next_values, next_words = find_top_k(predictions,self.beam_width) # (values,indexes)
+                next_words = tf.cast(next_words,dtype=tf.int64)
                 for k in range(self.beam_width):
-                    # concat the word we which we predicted to the sentence we have
-                    new_sentence =tf.concat([output,next_words[...,k]],axis=1)
-                    choose_next_top_k.write(j*self.beam_width+k,new_sentence)
-                    # next we compute the log loss for this sentence
-                    sentence_value,_ =  self.model([encoder_input, new_sentence], training=False)
-                    step_value = _compute_sum_log_value(new_sentence,sentence_value)
-                    choose_next_top_loss.write(j*self.beam_width+k,step_value)
+                    if i==0:
+                        top_k_sentence.write(k,tf.concat([output,next_words[...,k]],axis=1))
+                        top_k_loss_vector.write(k,tf.concat([[[0]],next_values[...,k]],axis=1))
+                    else:
+                        pre_step_loss = top_k_loss_vector.read(j)
+                        new_value = tf.concat([pre_step_loss,next_values[...,k]],axis=1)
+                        next_top_loss_vector.write(j*self.beam_width+k,new_value)
+
+                        new_sentence = tf.concat([output,next_words[...,k]],axis=1)
+                        next_top_k_sentence.write(j*self.beam_width+k,new_sentence)
+
+
+            if i!=0:
+                for l in range(next_top_loss_vector.size()):
+                    sentence_value = _compute_sum_log_value(next_top_k_sentence.read(l),
+                                                            next_top_loss_vector.read(l))
+                    next_top_loss.write(l,sentence_value)
+
+                # now we select the top k value from next_top_loss
+                _, top_k_indexes = tf.math.top_k(next_top_loss.stack(),k=self.beam_width)
+
+                for i, top_k_index in enumerate(top_k_indexes):
+                    top_k_sentence.write(i,next_top_k_sentence.read(top_k_index))
+                    top_k_loss_vector.write(i,next_top_loss_vector.read(top_k_index))
+            # if end in all of top_k_sentence we break
+            if tf.math.reduce_all(tf.math.reduce_any(tf.where(next_top_k_sentence.stack()==3,True,False),axis=-1)):
+                break
+
 
   
-        return top_k_sentence
+        return top_k_sentence,next_top_k_sentence
 
 
 
         
-def _compute_sum_log_value(new_sentence,sentence_value):
+def _compute_sum_log_value(new_sentence,sentence_vec):
     mask = create_prediction_mask(new_sentence)
-    #sentence_value = tf.math.multiply(sentence_value,mask)
-    print(f"sentence {sentence_value.shape}")
-    print(f"mask {mask.shape}")
-    return 0
+    mask = tf.cast(mask,dtype=tf.float32)
+    sentence_value = tf.math.log(tf.math.multiply(sentence_vec,mask))
+    return tf.math.reduce_sum(sentence_value)/tf.math.reduce_sum(mask)
 
 
 
