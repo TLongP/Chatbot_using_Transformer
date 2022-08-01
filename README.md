@@ -10,5 +10,5 @@ This is free to use, so do what ever you want.
 
 The Translator use a beam search for the best sentence. 
 
-This translator wworks only with 1 sentence as input
+This translator works only with 1 sentence as input, since this will we will generate a batch size of the beam_width.
 
