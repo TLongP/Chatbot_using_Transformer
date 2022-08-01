@@ -3,7 +3,12 @@
 This is free to use, so do what ever you want.
 
 
-## Currently
-- writing a beam serch for the translation
+## Need to do:
+[ ] pretrained embedding for the transformer
 
-I will update REAME soon.
+## Beam Search
+
+The Translator use a beam search for the best sentence. 
+
+This translator wworks only with 1 sentence as input
+
