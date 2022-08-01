@@ -7,16 +7,23 @@ loss_object = tf.keras.losses.SparseCategoricalCrossentropy(
 
 
 def loss_function(real, pred):
-    mask_real = tf.math.logical_not(tf.math.equal(real, 0))
     loss_ = loss_object(real, pred)
-    pred = tf.argmax(pred,axis=2)
-    mask_pred = create_prediction_mask(pred)
 
+
+    mask_real = tf.math.logical_not(tf.math.equal(real, 0))
+    pred = tf.argmax(pred,axis=2)
+    mask_pred = _create_prediction_mask(pred)
+
+    #return the 'longer' mask between the 2
     mask = tf.math.logical_or(mask_pred,mask_real)
+
+
+
     mask = tf.cast(mask,dtype=loss_.dtype)
     loss_ *= mask
 
     return tf.reduce_sum(loss_)/tf.reduce_sum(mask)
+
 
 
 def accuracy_function(real, pred):
@@ -25,7 +32,7 @@ def accuracy_function(real, pred):
     mask_real = tf.math.logical_not(tf.math.equal(real, 0))
 
     pred = tf.argmax(pred,axis=2)
-    mask_pred = create_prediction_mask(pred)
+    mask_pred = _create_prediction_mask(pred)
     mask = tf.math.logical_or(mask_pred,mask_real)
 
     accuracies = tf.math.logical_and(mask, accuracies)
@@ -34,7 +41,7 @@ def accuracy_function(real, pred):
     return tf.reduce_sum(accuracies)/tf.reduce_sum(mask)
 
 
-def create_prediction_mask(pred):
+def _create_prediction_mask(pred):
     """
     this will returns a mask with value 1 to the first end token
     """

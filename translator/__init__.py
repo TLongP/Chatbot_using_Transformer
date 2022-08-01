@@ -1,1 +1,1 @@
-from .translator import TranslatorWithVectorizer
+from .translator import TranslatorWithBeamSearch
