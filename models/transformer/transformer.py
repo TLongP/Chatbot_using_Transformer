@@ -2,7 +2,7 @@ import tensorflow as tf
 from models.transformer.encoder import Encoder
 from models.transformer.decoder import Decoder
 from models.masking.create_mask import create_padding_mask, create_look_ahead_mask
-
+from models.custom_blocks.embedding import load_embedding_array
 class Transformer(tf.keras.Model):
     """
     this model can be found in https://www.tensorflow.org/text/tutorials/transformer
@@ -59,6 +59,13 @@ class Transformer(tf.keras.Model):
 
         return padding_mask, look_ahead_mask
 
+    def _load_embedding(self,path,vocab):
+        """
+        load the embedding from path
+        """
+        embedding_array = load_embedding_array(path,vocab)
+        self.encoder._load_embedding_from_array(embedding_array)
+        self.decoder._load_embedding_from_array(embedding_array)
 
 
     def get_config(self):

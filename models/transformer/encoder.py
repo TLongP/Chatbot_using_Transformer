@@ -3,7 +3,6 @@ from models.positional_encoding.positional_encoding import PositionalEncoding
 from models.custom_blocks.layers import EncoderLayer
 
 
-
 class Encoder(tf.keras.layers.Layer):
     def __init__(self,*, num_layers, model_dim, 
                 num_heads, dff, input_vocab_size,
@@ -45,6 +44,16 @@ class Encoder(tf.keras.layers.Layer):
             x = self.enc_layers[i](x, training, mask)
 
         return x  # (batch_size, input_seq_len, model_dim)
+    def _load_embedding_from_array(self,embedding_array):
+        """
+        load the embedding array
+        """
+        self.embedding = tf.keras.layers.Embedding(
+            self.input_vocab_size, 
+            self.model_dim,
+            embeddings_initializer=tf.keras.initializers.Constant(embedding_array),
+            trainable=False
+                                                    )
 
     def get_config(self):
         config = super().get_config()
