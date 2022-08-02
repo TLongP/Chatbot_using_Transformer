@@ -3,14 +3,15 @@
 This is free to use, so do what ever you want.
 
 
-## Need to do:
-[ ] pretrained embedding for the transformer
-
 ## Beam Search
 
 The Translator use a beam search for the best sentence. 
 
-This translator works only with 1 sentence as input, since this will we will generate a batch size of the beam_width.
+This Translator should also works with other architecture such as sequence to sequence model.
+
+This translator works only with 1 sentence as input, since for each of top k sentences we want to focus to predict the next top k words for each of this sentence, we generate a batch size of k.
+
+what you also can do is, to use tf.TensorArray to write the sentences tokens, this could boost the performance ( I did not test it).
 
 ## metric
 to use the loss and accuracy function we use a mask function for the prediction
