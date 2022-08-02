@@ -1,12 +1,18 @@
 import tensorflow as tf
 
 class TranslatorWithBeamSearch(tf.Module):
-    def __init__(self,encoder,decoder, model, beam_width=10, alpha=0.7):
-
-        self.encoder = encoder
-        self.decoder = decoder
+    def __init__(self,encoder_vectorizer,decoder_vectorizer, model, beam_width=10, alpha=0.7):
+        """
+        args:
+        encoder_vectorizer : tf.keras.layers.TextVectorization
+        decoder_vectoruzer : tf.keras.layers.TextVectorization
+        or you can rewrite the __call__ methode beloww
+        
+        """
+        self.encoder_vectorizer = encoder_vectorizer
+        self.decoder_vectorizer = decoder_vectorizer
         self.model = model
-        self.vocabulary = self.decoder.get_vocabulary()
+        self.vocabulary = self.decoder_vectorizer.get_vocabulary()
         self.beam_width = beam_width
         self.alpha = alpha
     def __call__(self, sentence, max_length):
@@ -23,9 +29,9 @@ class TranslatorWithBeamSearch(tf.Module):
             sentence = sentence[tf.newaxis]
 
         
-        sentence = self.encoder(sentence)
+        sentence = self.encoder_vectorizer(sentence)
         encoder_input = sentence
-        start_end = self.decoder([''])[0]  # return start and end index
+        start_end = self.decoder_vectorizer([''])[0]  # return start and end index
         start_token = start_end[0][tf.newaxis][tf.newaxis]   # of shape (1,1) 
         end_token = start_end[1] # a number
 
