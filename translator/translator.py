@@ -1,12 +1,16 @@
 import tensorflow as tf
 
 class TranslatorWithBeamSearch(tf.Module):
-    def __init__(self,encoder_vectorizer,decoder_vectorizer, model, beam_width=10, alpha=0.7):
+    def __init__(self,encoder_vectorizer : tf.keras.layers.TextVectorization,
+                    decoder_vectorizer : tf.keras.layers.TextVectorization,
+                    model : tf.keras.Model, 
+                    beam_width=10, 
+                    alpha=0.7):
         """
         args:
         encoder_vectorizer : tf.keras.layers.TextVectorization
         decoder_vectoruzer : tf.keras.layers.TextVectorization
-        or you can rewrite the __call__ methode beloww
+        or you can rewrite the __call__ methode below
         
         """
         self.encoder_vectorizer = encoder_vectorizer
@@ -144,6 +148,12 @@ class TranslatorWithBeamSearch(tf.Module):
         
 def _compute_sum_log_value(new_sentence,sentence_vec,end_token,alpha=0.7):
     """
+    args:
+    new_sentence : a tuple of token represents the predicted sentence
+    sentence_vec : the value compute from the model from the new_sentence
+    end_token : int, represents the end token for example '3' 
+
+
     compute 1/T^\alpha sum log(P(y_i|x,y_1,...,y_i-1))
     mask: is the true long of the sentence
     so that the sentence ends with the first end_token
@@ -158,7 +168,6 @@ def _compute_sum_log_value(new_sentence,sentence_vec,end_token,alpha=0.7):
 
 def _create_prediction_mask(pred,end_token):
     """
-    can be found in models.custom_metrics.metrics
     this will returns a mask with value 1 until the first 
     end token reach 
     all that come after the first end token will be 
