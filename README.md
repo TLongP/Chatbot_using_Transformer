@@ -78,7 +78,9 @@ def _create_prediction_mask(pred,end_token):
     return mask
 ```
 what the first part do is it create a mask for pred
+
 mask_end_token_sum: end token will be mask with **$1$** and all following tokens will be mask with **$2$** or greater.
+
 mask_end_token: will mask with 1 if it is an end token else 0
 
 The second part will create a mask for the first end token all other will be 0.
